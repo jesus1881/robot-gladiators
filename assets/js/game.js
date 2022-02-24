@@ -31,47 +31,57 @@ var fightOrSkip = function () {
         }
     }
 }
+
 var fight = function (enemy) {
+    //// keep track of who goes first
+    var isPlayerTurn = true;
+    // randomly change turn order
+    if (Math.random() > 0.5) {
+        isPlayerTurn = false;
+    }
     // repeat and execute the as long as the eney robot is alive
     while (playerInfo.health > 0 && enemy.health > 0) {
-        if (fightOrSkip()) {
-            // if true, leave the fight by breaking the loop
-            break;
+        if (isPlayerTurn) {
+            if (fightOrSkip()) {
+                // if true, leave the fight by breaking the loop
+                break;
+            }
+            // remove enemy's health by subtracting the amount set in the playerAttack variable
+            var damage = randomNumber(playerInfo.attack - 3, playerInfo.attack)
+            enemy.health = Math.max(0, enemy.health - damage);
+            console.log(
+                playerInfo.name + " attacked " + enemy.name + ". " + enemy.name + " now has " + enemy.health + " health remaining."
+            );
+
+            // check enemy's health
+            if (enemy.health <= 0) {
+                window.alert(enemy.name + " has died!");
+                //award player for wining
+                playerInfo.money = playerInfo.money + 20;
+                break;
+            } else {
+                window.alert(enemy.name + " still has " + enemy.health + " health left.");
+            }
+
+            // remove player's health by subtracting the amount set in the enemy.attack variable
+            var damage = randomNumber(enemy.attack - 3, enemy.attack);
+            playerInfo.health = Math.max(0, playerInfo.health - damage);
+            console.log(
+                enemy.name + " attacked " + playerInfo.name + ". " + playerInfo.name + " now has " + playerInfo.health + " health remaining."
+            );
+
+            // check player's health
+            if (playerInfo.health <= 0) {
+                window.alert(playerInfo.name + " has died!");
+                break;
+            } else {
+                window.alert(playerInfo.name + " still has " + playerInfo.health + " health left.");
+            }
         }
-        // remove enemy's health by subtracting the amount set in the playerAttack variable
-        var damage = randomNumber(playerInfo.attack - 3, playerInfo.attack)
-        enemy.health = Math.max(0, enemy.health - damage);
-        console.log(
-            playerInfo.name + " attacked " + enemy.name + ". " + enemy.name + " now has " + enemy.health + " health remaining."
-        );
-
-        // check enemy's health
-        if (enemy.health <= 0) {
-            window.alert(enemy.name + " has died!");
-            break;
-        } else {
-            window.alert(enemy.name + " still has " + enemy.health + " health left.");
-        }
-
-        // remove player's health by subtracting the amount set in the enemy.attack variable
-        var damage = randomNumber(enemy.attack - 3, enemy.attack);
-        playerInfo.health = Math.max(0, playerInfo.health - damage);
-        console.log(
-            enemy.name + " attacked " + playerInfo.name + ". " + playerInfo.name + " now has " + playerInfo.health + " health remaining."
-        );
-
-        // check player's health
-        if (playerInfo.health <= 0) {
-            window.alert(playerInfo.name + " has died!");
-            break;
-        } else {
-            window.alert(playerInfo.name + " still has " + playerInfo.health + " health left.");
-        }
-
+        // switch turn order for next round
+        isPlayerTurn = !isPlayerTurn;
     }
-
-
-}
+};
 
 
 //function start game
@@ -108,39 +118,48 @@ var startGame = function () {
 };
 // function end game the entire game
 var endGame = function () {
-    //if player still alive, player wins
-    if (playerInfo.health > 0) {
-        window.alert("Great job, you've survive the game! You now have a score of " + playerInfo.money);
+    window.alert("The game has now ended. Let's see how you did!");
+
+    // check localStorage for high score, if it's not there, use 0
+    var highScore = localStorage.getItem("highscore");
+    if (highScore === null) {
+        highScore = 0;
+    }
+    // if player has more money than the high score, player has new high score!
+    if (playerInfo.money > highScore) {
+        localStorage.setItem("highscore", playerInfo.money);
+        localStorage.setItem("name", playerInfo.name);
+
+        alert(playerInfo.name + " now has the high score of " + playerInfo.money + "!");
     }
     else {
-        window.alert("You have lost robot in battle.");
+        alert(playerInfo.name + " did not beat the high score of " + highScore + ". Maybe next time!");
     }
-    //ask player play again
+
+    // ask player if they'd like to play again
     var playAgainConfirm = window.confirm("Would you like to play again?");
+
     if (playAgainConfirm) {
         startGame();
     }
     else {
         window.alert("Thank you for playing Robot Gladiators! Come back soon!");
     }
-}
-
+};
 // shop function
 var shop = function () {
     var shoppingOptionPrompt = window.prompt(
-        "Would tou like to REFILL your health, UPGRADE your attack, or LEAVE the store? Please enter one: 'REFILL', 'UPGRADE', or 'LEAVE' to make a choice."
+        "Would tou like to REFILL your health, UPGRADE your attack, or LEAVE the store? Please enter one 1 for REFILL , 2 for UPGRADE, or 3 for LEAVE"
     );
+    shoppingOptionPrompt = parseInt(shoppingOptionPrompt);
     switch (shoppingOptionPrompt) {
-        case "REFILL": // new case
-        case "refill":
+        case 1:
             playerInfo.refillHealth();
             break;
-        case "UPGRADE": // new case
-        case "upgrade":
+        case 2:
             playerInfo.upgradeAttack();
             break;
-        case "LEAVE": // new case
-        case "leave":
+        case 3:
             window.alert("Leaving the store.");
             break;
         default:
@@ -149,7 +168,7 @@ var shop = function () {
             break;
     }
 
-}
+};
 // function to generate a random numeric value
 var randomNumber = function (min, max) {
     var value = Math.floor(Math.random() * (max - min + 1)) + min;
